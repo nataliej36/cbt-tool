@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In the Moment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F4EF;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE8;
+    --ink: #1C1917;
+    --ink2: #6B6560;
+    --ink3: #A09B96;
+    --accent: #7C6B5A;
+    --accent-light: #EDE8E2;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+
+    /* Pattern colours */
+    --erasure: #7C6B5A;
+    --erasure-bg: #F5F0EB;
+    --esteem: #8B7BAB;
+    --esteem-bg: #F4F1F9;
+    --perf: #4A7FA5;
+    --perf-bg: #EEF4F9;
+    --anxiety: #C4956A;
+    --anxiety-bg: #FDF5EE;
+    --low: #5A8A6A;
+    --low-bg: #EFF5F1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+  .app { max-width: 480px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; letter-spacing: -0.3px; line-height: 1.2; }
+  h2 { font-family: 'DM Serif Display', serif; font-size: 19px; font-weight: 400; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--ink3); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
+  .card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 12px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .header { margin-bottom: 24px; }
+  .header .date-line { font-size: 13px; color: var(--ink3); margin-bottom: 8px; }
+
+  /* Cycle context banner */
+  .cycle-banner { border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .cycle-banner .cb-day { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; }
+  .cycle-banner .cb-phase { color: var(--ink2); }
+  .cycle-banner .cb-none { color: var(--ink3); font-style: italic; }
+
+  /* Pattern selector */
+  .pattern-grid { display: flex; flex-direction: column; gap: 10px; }
+  .pattern-btn { border: 1.5px solid var(--surface2); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; text-align: left; background: var(--surface); transition: all 0.18s ease; display: flex; align-items: center; gap: 12px; }
+  .pattern-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .pattern-btn .p-icon { font-size: 20px; width: 32px; flex-shrink: 0; text-align: center; }
+  .pattern-btn .p-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .pattern-btn .p-desc { font-size: 12px; color: var(--ink3); line-height: 1.4; }
+
+  .pattern-btn.erasure  { border-color: var(--erasure);  background: var(--erasure-bg); }
+  .pattern-btn.esteem   { border-color: var(--esteem);   background: var(--esteem-bg); }
+  .pattern-btn.perf     { border-color: var(--perf);     background: var(--perf-bg); }
+  .pattern-btn.anxiety  { border-color: var(--anxiety);  background: var(--anxiety-bg); }
+  .pattern-btn.low      { border-color: var(--low);      background: var(--low-bg); }
+
+  /* Context check */
+  .q-block { margin-bottom: 20px; }
+  .q-label { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+  .q-sub { font-size: 12px; color: var(--ink3); margin-top: -6px; margin-bottom: 10px; }
+  .q-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .q-opt { border: 1.5px solid var(--surface2); border-radius: 99px; padding: 7px 14px; font-size: 13px; cursor: pointer; background: var(--surface); color: var(--ink2); transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .q-opt:hover { border-color: var(--accent); color: var(--ink); }
+  .q-opt.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  /* Pattern banner on checklist screen */
+  .pattern-banner { border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; }
+  .pattern-banner .pb-label { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 4px; opacity: 0.7; }
+  .pattern-banner .pb-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 6px; }
+  .pattern-banner .pb-note { font-size: 13px; opacity: 0.85; line-height: 1.5; }
+
+  /* Checklist */
+  .checklist-section { margin-bottom: 10px; }
+  .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); margin-bottom: 8px; padding: 0 4px; }
+
+  .check-item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .check-item:hover { border-color: var(--surface2); }
+  .check-item.done { background: var(--surface2); }
+  .check-box { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--surface2); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.18s; background: var(--surface); }
+  .check-item.done .check-box { background: var(--accent); border-color: var(--accent); }
+  .check-item.done .check-box::after { content: ''; display: block; width: 5px; height: 9px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); }
+  .check-text { font-size: 14px; line-height: 1.5; flex: 1; }
+  .check-sub { font-size: 12px; color: var(--ink3); margin-top: 3px; line-height: 1.4; }
+  .check-item.done .check-text { color: var(--ink3); text-decoration: line-through; text-decoration-color: var(--ink3); }
+  .check-item.done .check-sub { opacity: 0.5; }
+
+  /* Phrase card — highlighted prompt */
+  .phrase-card { background: var(--accent-light); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 6px; border-left: 3px solid var(--accent); }
+  .phrase-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px; }
+  .phrase-text { font-size: 14px; font-style: italic; color: var(--ink); line-height: 1.6; }
+
+  /* Buttons */
+  .btn-primary { background: var(--ink); color: #fff; border: none; border-radius: 99px; padding: 14px 32px; font-size: 15px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; width: 100%; transition: opacity 0.15s, transform 0.12s; margin-top: 8px; }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .btn-ghost { background: transparent; color: var(--ink2); border: 1.5px solid var(--surface2); border-radius: 99px; padding: 10px 24px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--ink); }
+  .btn-export { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 99px; padding: 10px 24px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+  .btn-export:hover { background: var(--accent-light); }
+  .footer-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; padding-top: 4px; }
+
+  .fade-in { animation: fadeIn 0.35s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 24px; }
+  .prog-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--surface2); }
+  .prog-dot.done { background: var(--ink); }
+  .prog-dot.current { background: var(--accent); }
+
+  .alert { border-radius: var(--radius-sm); padding: 11px 14px; font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+  .alert-warning { background: #FEF9EE; border: 1px solid #F5D98A; color: #7A5C1A; }
+  .alert-purple { background: #F4F1F9; border: 1px solid #C5B8E8; color: #4A3875; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SCREEN 1: Pattern selector -->
+  <div class="screen active" id="screen-1">
+    <div class="header">
+      <div class="date-line" id="date-line"></div>
+      <h1>In the moment.</h1>
+      <p style="color:var(--ink2); margin-top:6px; font-size:14px;">What's happening right now?</p>
+    </div>
+
+    <div id="cycle-context-banner"></div>
+
+    <div class="progress-dots">
+      <div class="prog-dot current"></div>
+      <div class="prog-dot"></div>
+      <div class="prog-dot"></div>
+    </div>
+
+    <div class="pattern-grid">
+      <button class="pattern-btn erasure" onclick="selectPattern('erasure')">
+        <div class="p-icon">🫥</div>
+        <div><div class="p-name">Self-erasure</div><div class="p-desc">About to suppress a need or not say something</div></div>
+      </button>
+      <button class="pattern-btn esteem" onclick="selectPattern('esteem')">
+        <div class="p-icon">🪞</div>
+        <div><div class="p-name">Self-esteem dip</div><div class="p-desc">Feeling not enough or disconnected from my worth</div></div>
+      </button>
+      <button class="pattern-btn perf" onclick="selectPattern('perf')">
+        <div class="p-icon">🌀</div>
+        <div><div class="p-name">Perfectionism spiral</div><div class="p-desc">Overcritical, catastrophising about performance</div></div>
+      </button>
+      <button class="pattern-btn anxiety" onclick="selectPattern('anxiety')">
+        <div class="p-icon">⚡</div>
+        <div><div class="p-name">Anxiety spike</div><div class="p-desc">Physical or cognitive escalation</div></div>
+      </button>
+      <button class="pattern-btn low" onclick="selectPattern('low')">
+        <div class="p-icon">🌫</div>
+        <div><div class="p-name">General low</div><div class="p-desc">Flat, depleted, hard to identify</div></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Context check-in -->
+  <div class="screen" id="screen-2">
+    <div class="header">
+      <div class="date-line" id="date-line-2"></div>
+      <h1>A little context.</h1>
+    </div>
+
+    <div id="cycle-context-banner-2"></div>
+
+    <div class="progress-dots">
+      <div class="prog-dot done"></div>
+      <div class="prog-dot current"></div>
+      <div class="prog-dot"></div>
+    </div>
+
+    <div class="card">
+      <div class="q-block">
+        <div class="q-label">How intense is this right now?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="selectQ('intensity','mild',this)">Mild — just noticing it</button>
+          <button class="q-opt" onclick="selectQ('intensity','moderate',this)">Moderate — it's pulling at me</button>
+          <button class="q-opt" onclick="selectQ('intensity','strong',this)">Strong — hard to think past it</button>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <div class="q-label">Has something triggered this?</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="selectQ('trigger','interaction',this)">An interaction or conversation</button>
+          <button class="q-opt" onclick="selectQ('trigger','work',this)">Work or task pressure</button>
+          <button class="q-opt" onclick="selectQ('trigger','partner',this)">Partner or relationship</button>
+          <button class="q-opt" onclick="selectQ('trigger','body',this)">How I look or feel physically</button>
+          <button class="q-opt" onclick="selectQ('trigger','unclear',this)">Not sure — it arrived on its own</button>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <div class="q-label">Where are you right now?</div>
+        <div class="q-sub">Affects which prompts are most useful</div>
+        <div class="q-options">
+          <button class="q-opt" onclick="selectQ('context','work',this)">At work or commuting</button>
+          <button class="q-opt" onclick="selectQ('context','home',this)">At home</button>
+          <button class="q-opt" onclick="selectQ('context','out',this)">Out and about</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button class="btn-ghost" onclick="goTo(1)">Back</button>
+        <button class="btn-primary" id="btn-next-2" onclick="goTo(3)" disabled style="margin-top:0;">Show me what to do</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Checklist -->
+  <div class="screen" id="screen-3">
+    <div id="checklist-content" class="fade-in"></div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────
+const appState = {
+  pattern: null,
+  intensity: null,
+  trigger: null,
+  context: null,
+  cycleDay: null,
+  phaseName: null,
+  phaseKey: null
+};
+
+let checkItemCount = 0;
+const LOG_KEY = 'cbt_log';
+
+// ── CYCLE CONTEXT ────────────────────────────────────────────────────
+const phaseNames = {
+  menstrual: 'Menstruation',
+  earlyF_vulnerable: 'Early follicular — vulnerable window',
+  earlyF: 'Early follicular',
+  midF: 'Mid follicular',
+  ovulation: 'Early luteal / post-ovulation',
+  luteal: 'Late luteal'
+};
+
+const phaseColors = {
+  menstrual: '#C06B6B', earlyF_vulnerable: '#8B7BAB', earlyF: '#8B7BAB',
+  midF: '#5A8A6A', ovulation: '#4A7FA5', luteal: '#C4956A'
+};
+
+const phaseBgs = {
+  menstrual: '#FDF0F0', earlyF_vulnerable: '#F4F1F9', earlyF: '#F4F1F9',
+  midF: '#EFF5F1', ovulation: '#EEF4F9', luteal: '#FDF5EE'
+};
+
+function loadCycleContext() {
+  try {
+    const raw = localStorage.getItem('cycleguide_day');
+    if (!raw) return null;
+    const payload = JSON.parse(raw);
+    const today = todayKey();
+    if (payload.date !== today) return null;
+    return payload.state;
+  } catch(e) { return null; }
+}
+
+function renderCycleBanner(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const cs = loadCycleContext();
+  if (cs && cs.cycleDay && cs.phase) {
+    appState.cycleDay = cs.cycleDay;
+    appState.phaseKey = cs.phase;
+    appState.phaseName = phaseNames[cs.phase] || cs.phase;
+    const color = phaseColors[cs.phase] || '#7C6B5A';
+    const bg = phaseBgs[cs.phase] || '#F5F0EB';
+    el.innerHTML = `<div class="cycle-banner" style="background:${bg}; border:1px solid ${color}33;">
+      <span style="color:${color}" class="cb-day">Day ${cs.cycleDay}</span>
+      <span class="cb-phase" style="color:${color}">${appState.phaseName}</span>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="cycle-banner" style="background:var(--surface2);">
+      <span class="cb-none">Open the Daily Guide first to import your cycle context</span>
+    </div>`;
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+function init() {
+  const d = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const str = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+  document.getElementById('date-line').textContent = str;
+  document.getElementById('date-line-2').textContent = str;
+  renderCycleBanner('cycle-context-banner');
+  renderCycleBanner('cycle-context-banner-2');
+}
+init();
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────
+function selectPattern(p) {
+  appState.pattern = p;
+  goTo(2);
+}
+
+function selectQ(key, val, el) {
+  appState[key] = val;
+  el.closest('.q-options').querySelectorAll('.q-opt').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  checkNext2();
+}
+
+function checkNext2() {
+  document.getElementById('btn-next-2').disabled = !(appState.intensity && appState.trigger && appState.context);
+}
+
+function goTo(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  window.scrollTo(0, 0);
+  if (n === 3) buildChecklist();
+}
+
+// ── PATTERN DATA ─────────────────────────────────────────────────────
+const patterns = {
+  erasure: {
+    name: 'Self-erasure',
+    color: 'var(--erasure)', bg: 'var(--erasure-bg)',
+    note: 'You\'re about to make yourself smaller. That\'s the pattern — not the situation requiring it.',
+    phrase: 'I notice I\'m about to suppress something. That\'s a conditioned response, not a requirement.',
+    sections: [
+      {
+        label: 'Name what you\'re about to not say',
+        items: [
+          { text: 'Identify the unsaid thing', sub: 'What specifically am I about to not say, ask for, or express?' },
+          { text: 'Name the predicted outcome', sub: 'If I said it, what do I believe would happen? Write it down even if only in your head.' },
+          { text: 'Check whether that prediction is accurate or learned', sub: 'Has this person harmed me for expressing a need before, or am I running an old script?' }
+        ]
+      },
+      {
+        label: 'Distinguish helping from disappearing',
+        items: [
+          { text: 'Ask: am I doing more, or becoming less?', sub: 'Taking on practical tasks is love. Removing yourself emotionally is self-erasure.' },
+          { text: 'Name one thing that is true for me right now', sub: 'Not to act on it immediately — just to acknowledge it exists.' },
+          { text: 'Identify the smallest version of the thing I\'m suppressing that I could say', sub: 'Not the full conversation. Just the opening.' }
+        ]
+      },
+      {
+        label: 'Ground in the agreement',
+        items: [
+          { text: 'Remind yourself of the advance agreement', sub: 'He has already agreed that hearing your struggles is not a burden. You are honouring an agreement, not creating a problem.' },
+          { text: 'Decide: say it now, or schedule when', sub: 'Not saying it indefinitely is the pattern. Saying it later today is not.' }
+        ]
+      }
+    ]
+  },
+
+  esteem: {
+    name: 'Self-esteem dip',
+    color: 'var(--esteem)', bg: 'var(--esteem-bg)',
+    note: 'The attachment system is responding to a signal. This is not information about your worth.',
+    phrase: 'This is the attachment response. His illness is affecting my sense of worth right now. That\'s a known pattern — not a truth.',
+    sections: [
+      {
+        label: 'Name it as a pattern, not a truth',
+        items: [
+          { text: 'Say the defusion phrase — out loud if you can', sub: '"This is the attachment response. His unavailability is triggering a dip. That\'s a known pattern."' },
+          { text: 'Note whether the dip arrived alongside reduced contact or his low mood', sub: 'If yes — this is attachment responding to a signal, not evidence about you.' },
+          { text: 'Check the cycle day', sub: 'If you\'re in days 5–7 or late luteal (21–27), the dip is amplified by physiology. Name both causes.' }
+        ]
+      },
+      {
+        label: 'Counter the evidence selectively',
+        items: [
+          { text: 'Name one thing you did well today — however small', sub: 'Not to argue with the dip. To introduce a data point it is ignoring.' },
+          { text: 'Name one person who would disagree with the dip\'s assessment of you', sub: 'Not for reassurance — as a reality check on the dip\'s reliability as a narrator.' },
+          { text: 'Identify whether the dip is using "always" or "never" language', sub: '"I\'m never enough" is the dip generalising from a momentary state. Note it.' }
+        ]
+      },
+      {
+        label: 'Reduce the load on the dip',
+        items: [
+          { text: 'Do not make any permanent-feeling decisions in this state', sub: 'Write down anything that feels urgent. Revisit on a neutral day.' },
+          { text: 'Put your phone down for 10 minutes', sub: 'Scrolling while in a dip is actively harmful. Remove the comparison environment.' }
+        ]
+      }
+    ]
+  },
+
+  perf: {
+    name: 'Perfectionism spiral',
+    color: 'var(--perf)', bg: 'var(--perf-bg)',
+    note: 'The spiral is not quality control. It\'s anxiety wearing the clothes of standards.',
+    phrase: 'I am applying a standard to myself I would not apply to anyone else in this situation.',
+    sections: [
+      {
+        label: 'Identify the spiral\'s logic',
+        items: [
+          { text: 'Name the specific standard you\'re failing to meet', sub: 'Not "I\'m not good enough" — what exact thing, by what exact measure?' },
+          { text: 'Ask: would I apply this standard to a colleague or friend in the same situation?', sub: 'If no — this is not a quality standard. It\'s self-punishment.' },
+          { text: 'Identify the feared outcome driving the spiral', sub: 'What do I believe will happen if this isn\'t perfect? Name it explicitly.' }
+        ]
+      },
+      {
+        label: 'Test the feared outcome',
+        items: [
+          { text: 'Is the feared outcome likely, possible, or catastrophised?', sub: 'Likely = address it practically. Possible = plan for it. Catastrophised = name it as such.' },
+          { text: 'What is the actual minimum acceptable outcome here?', sub: 'Not ideal. Acceptable. Define it. The spiral often has no floor — give it one.' },
+          { text: 'Have I been here before and survived it?', sub: 'If yes — note that. The spiral predicts catastrophe; your history predicts recovery.' }
+        ]
+      },
+      {
+        label: 'Interrupt the spiral behaviourally',
+        items: [
+          { text: 'Set a timer for 10 minutes and work within that container only', sub: 'The spiral thrives on open-ended time. A container breaks the loop.' },
+          { text: 'Identify the next single action — not the whole task', sub: 'The spiral paralyses by showing the whole picture. One action at a time is the exit.' }
+        ]
+      }
+    ]
+  },
+
+  anxiety: {
+    name: 'Anxiety spike',
+    color: 'var(--anxiety)', bg: 'var(--anxiety-bg)',
+    note: 'The spike is a nervous system response. You can interrupt it physiologically.',
+    phrase: 'This is my nervous system responding to a perceived threat. I can work with this.',
+    sections: [
+      {
+        label: 'Interrupt physiologically first',
+        items: [
+          { text: 'Breathe in for 4 counts, out for 6–8 counts — do this 5 times now', sub: 'This is not a relaxation exercise. It directly activates the vagus nerve. Do it before anything else.' },
+          { text: 'Name 5 things you can see right now', sub: 'Grounds the nervous system in the present environment rather than the threat prediction.' },
+          { text: 'Unclench your jaw, drop your shoulders, ungrip your hands', sub: 'The body is holding the spike physically. Release the posture before engaging the thoughts.' }
+        ]
+      },
+      {
+        label: 'Examine the spike\'s content',
+        items: [
+          { text: 'Name the specific thought driving the spike', sub: 'Not "I\'m anxious" — what is the thought? "Something will go wrong with ___" or "I will fail at ___"?' },
+          { text: 'Is this a prediction or a fact?', sub: 'Anxiety speaks in predictions. Label it as such: "I\'m having the prediction that ___."' },
+          { text: 'Check whether the cycle phase is amplifying this', sub: 'Late luteal and days 5–7 increase anxiety sensitivity neurobiologically. If you\'re in those phases, name it as a known amplifier.' }
+        ]
+      },
+      {
+        label: 'Reduce load and contain',
+        items: [
+          { text: 'Identify one thing I can control right now', sub: 'Anxiety spikes when we focus on uncontrollable outcomes. Name something within reach.' },
+          { text: 'Use CBT tools now — not after the spike peaks', sub: 'The earlier the intervention, the less energy it costs.' }
+        ]
+      }
+    ]
+  },
+
+  low: {
+    name: 'General low',
+    color: 'var(--low)', bg: 'var(--low-bg)',
+    note: 'Flat and depleted is a state, not a verdict. The goal right now is minimum viable care.',
+    phrase: 'I am depleted. That is a physiological and emotional state, not a permanent condition.',
+    sections: [
+      {
+        label: 'Check the basics first',
+        items: [
+          { text: 'Have I eaten in the last 3–4 hours?', sub: 'Blood sugar is the most common physical amplifier of low mood. If no — eat something with protein before anything else.' },
+          { text: 'Am I dehydrated?', sub: 'Drink a full glass of water now. This is not a metaphor — dehydration directly worsens mood and cognitive function.' },
+          { text: 'Check the cycle day', sub: 'Days 5–7 and late luteal are documented low-resilience windows. If you\'re there — name it. This has a known end point.' }
+        ]
+      },
+      {
+        label: 'Do not demand more from yourself',
+        items: [
+          { text: 'Lower today\'s expectations explicitly', sub: 'Name what the minimum acceptable version of today looks like. That is enough.' },
+          { text: 'Defer anything that can be deferred', sub: 'Decisions made from depletion are worse decisions. Write them down for later.' },
+          { text: 'Do not interpret this state as information about the future', sub: '"I always feel like this" is the low state talking. You have felt differently before and will again.' }
+        ]
+      },
+      {
+        label: 'One small recovery action',
+        items: [
+          { text: 'Identify the single lowest-effort thing that usually helps', sub: 'Not what should help. What actually helps for you — even marginally.' },
+          { text: 'Do one thing, then reassess', sub: 'The whole day does not need to be fixed. One thing, then see where you are.' }
+        ]
+      }
+    ]
+  }
+};
+
+// ── BUILD CHECKLIST ───────────────────────────────────────────────────
+function buildChecklist() {
+  checkItemCount = 0;
+  const p = patterns[appState.pattern];
+  const isVulnerable = appState.phaseKey === 'earlyF_vulnerable';
+  const isLuteal = appState.phaseKey === 'luteal';
+  const isStrong = appState.intensity === 'strong';
+
+  let html = '<div class="fade-in">';
+
+  // Pattern banner
+  html += `<div class="pattern-banner" style="background:${p.bg}; border:1.5px solid ${p.color}44;">
+    <div class="pb-label" style="color:${p.color}">${appState.phaseName ? 'Day ' + appState.cycleDay + ' · ' + appState.phaseName : 'In the moment'}</div>
+    <div class="pb-title" style="color:${p.color}">${p.name}</div>
+    <div class="pb-note" style="color:${p.color}">${p.note}</div>
+  </div>`;
+
+  // Cycle phase alert if vulnerable
+  if (isVulnerable || isLuteal) {
+    html += `<div class="alert alert-purple">You're in your ${isVulnerable ? 'days 5–7 vulnerable window' : 'late luteal phase'}. This amplifies ${appState.pattern === 'anxiety' ? 'anxiety sensitivity' : appState.pattern === 'esteem' ? 'the self-esteem dip' : 'emotional reactivity'} neurobiologically. Name that as a cause — it doesn't make this less real, but it gives it a known end point.</div>`;
+  }
+
+  // Intensity alert
+  if (isStrong) {
+    html += `<div class="alert alert-warning">Strong intensity — start with the first section only. Don't try to work through everything at once.</div>`;
+  }
+
+  // Key phrase
+  html += `<div class="phrase-card">
+    <div class="phrase-label">Say this — out loud if you can</div>
+    <div class="phrase-text">${p.phrase}</div>
+  </div>`;
+
+  // Sections
+  p.sections.forEach(section => {
+    html += `<div class="checklist-section">
+      <div class="section-label">${section.label}</div>`;
+    section.items.forEach(item => {
+      const id = 'ci-' + (++checkItemCount);
+      html += `<div class="check-item" id="${id}" onclick="toggleCheck('${id}')">
+        <div class="check-box"></div>
+        <div>
+          <div class="check-text">${item.text}</div>
+          <div class="check-sub">${item.sub}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  // Footer
+  html += `<div class="footer-row">
+    <button class="btn-export" onclick="exportEntry()">Export this entry</button>
+    <button class="btn-ghost" onclick="startOver()">Start over</button>
+  </div></div>`;
+
+  document.getElementById('checklist-content').innerHTML = html;
+}
+
+function toggleCheck(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('done');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────
+function exportEntry() {
+  const p = patterns[appState.pattern];
+  const d = new Date();
+  const dayName = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+  const triggerMap = { interaction:'An interaction or conversation', work:'Work or task pressure', partner:'Partner or relationship', body:'How I look or feel physically', unclear:'Unclear — arrived on its own' };
+  const contextMap = { work:'At work or commuting', home:'At home', out:'Out and about' };
+  const intensityMap = { mild:'Mild', moderate:'Moderate', strong:'Strong' };
+
+  const ticked = [], unticked = [];
+  document.querySelectorAll('.check-item').forEach(el => {
+    const txt = el.querySelector('.check-text');
+    if (!txt) return;
+    (el.classList.contains('done') ? ticked : unticked).push(txt.textContent.trim());
+  });
+
+  let lines = [];
+  lines.push('IN THE MOMENT — ' + dayName.toUpperCase());
+  lines.push('Time: ' + timeStr);
+  lines.push('─'.repeat(40));
+  lines.push('');
+  lines.push('PATTERN');
+  lines.push('  ' + p.name);
+  lines.push('  Intensity: ' + (intensityMap[appState.intensity] || '—'));
+  lines.push('  Trigger: ' + (triggerMap[appState.trigger] || '—'));
+  lines.push('  Where: ' + (contextMap[appState.context] || '—'));
+  if (appState.cycleDay) {
+    lines.push('');
+    lines.push('CYCLE CONTEXT');
+    lines.push('  Day ' + appState.cycleDay + ' — ' + (appState.phaseName || '—'));
+  }
+  lines.push('');
+  lines.push('PHRASE USED');
+  lines.push('  ' + p.phrase);
+  lines.push('');
+  if (ticked.length) {
+    lines.push('COMPLETED');
+    ticked.forEach(t => lines.push('  ✓ ' + t));
+  }
+  if (unticked.length) {
+    lines.push('');
+    lines.push('NOT COMPLETED');
+    unticked.forEach(t => lines.push('  ○ ' + t));
+  }
+  lines.push('');
+  lines.push('─'.repeat(40));
+
+  const text = lines.join('\n');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cbt-${appState.pattern}-${todayKey()}-${timeStr.replace(':','-')}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Save to log
+  try {
+    const existing = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+    existing.push({ date: todayKey(), time: timeStr, pattern: appState.pattern, intensity: appState.intensity, cycleDay: appState.cycleDay, phase: appState.phaseKey, ticked, unticked });
+    localStorage.setItem(LOG_KEY, JSON.stringify(existing.slice(-50)));
+  } catch(e) {}
+}
+
+// ── START OVER ────────────────────────────────────────────────────────
+function startOver() {
+  Object.keys(appState).forEach(k => { appState[k] = null; });
+  document.querySelectorAll('.q-opt').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-next-2').disabled = true;
+  document.getElementById('checklist-content').innerHTML = '';
+  init();
+  goTo(1);
+}
+</script>
+</body>
+</html>
